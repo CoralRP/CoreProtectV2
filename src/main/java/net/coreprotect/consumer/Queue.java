@@ -231,10 +231,10 @@ public class Queue {
         queueStandardData(consumerId, currentConsumer, new String[] { user, null }, location);
     }
 
-    protected static synchronized void queueContainerTransaction(String user, Location location, Material type, Object inventory, int chestId) {
+    protected static synchronized void queueContainerTransaction(String user, Location location, Material type, Object inventory, int chestId, boolean glove) {
         int currentConsumer = Consumer.currentConsumer;
         int consumerId = Consumer.newConsumerId(currentConsumer);
-        addConsumer(currentConsumer, new Object[] { consumerId, Process.CONTAINER_TRANSACTION, type, 0, null, 0, chestId, null });
+        addConsumer(currentConsumer, new Object[] { consumerId, Process.CONTAINER_TRANSACTION, type, 0, null, 0, chestId, null, glove });
         Consumer.consumerInventories.get(currentConsumer).put(consumerId, inventory);
         queueStandardData(consumerId, currentConsumer, new String[] { user, null }, location);
     }
@@ -311,10 +311,10 @@ public class Queue {
         queueStandardData(consumerId, currentConsumer, new String[] { player.getName(), null }, new Object[] { timestamp, player.getLocation().clone() });
     }
 
-    protected static void queuePlayerInteraction(String user, BlockState block, Material type) {
+    protected static void queuePlayerInteraction(String user, BlockState block, Material type, boolean glove) {
         int currentConsumer = Consumer.currentConsumer;
         int consumerId = Consumer.newConsumerId(currentConsumer);
-        addConsumer(currentConsumer, new Object[] { consumerId, Process.PLAYER_INTERACTION, type, 0, null, 0, 0, null });
+        addConsumer(currentConsumer, new Object[] { consumerId, Process.PLAYER_INTERACTION, type, 0, null, 0, 0, null, glove });
         queueStandardData(consumerId, currentConsumer, new String[] { user, null }, block);
     }
 

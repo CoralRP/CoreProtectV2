@@ -1,9 +1,12 @@
 package net.coreprotect.database.lookup;
 
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.Locale;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
+import net.coreprotect.database.Database;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.BlockState;
 import org.bukkit.command.CommandSender;
@@ -170,6 +173,31 @@ public class BlockLookup {
             e.printStackTrace();
         }
         return resultText;
+    }
+
+    public static CompletableFuture<Optional<Long>> getLastPlaceTime(Location location) {
+        return CompletableFuture.supplyAsync(() -> {
+            int worldId = WorldUtils.getWorldId(location.getWorld().getName());
+            int x = location.getBlockX();
+            int y = location.getBlockY();
+            int z = location.getBlockZ();
+
+            try (Connection connection = Database.getConnection(false, 1000); PreparedStatement statement = connection.prepareStatement("SELECT * FROM " + ConfigHandler.prefix + "block WHERE action = 1 AND wid = ? AND x = ? AND y = ? AND z = ? ORDER BY time DESC LIMIT 1")) {
+                statement.setInt(1, worldId);
+                statement.setInt(2, x);
+                statement.setInt(3, y);
+                statement.setInt(4, z);
+
+                ResultSet result = statement.executeQuery();
+                if (result.next()) {
+                    return Optional.of(result.getLong("time"));
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+            return Optional.empty();
+        });
     }
 
 }

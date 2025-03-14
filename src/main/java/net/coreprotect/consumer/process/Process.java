@@ -155,10 +155,10 @@ public class Process {
                                     ContainerBreakProcess.process(preparedStmtContainers, i, processId, id, blockType, user, object);
                                     break;
                                 case Process.PLAYER_INTERACTION:
-                                    PlayerInteractionProcess.process(preparedStmtBlocks, i, user, object, blockType);
+                                    PlayerInteractionProcess.process(preparedStmtBlocks, i, user, object, blockType, (Boolean) data[8]);
                                     break;
                                 case Process.CONTAINER_TRANSACTION:
-                                    ContainerTransactionProcess.process(preparedStmtContainers, preparedStmtItems, i, processId, id, blockType, forceData, user, object);
+                                    ContainerTransactionProcess.process(preparedStmtContainers, preparedStmtItems, i, processId, id, blockType, forceData, user, object, (Boolean) data[8]);
                                     break;
                                 case Process.ITEM_TRANSACTION:
                                     ItemTransactionProcess.process(preparedStmtItems, i, processId, id, forceData, replaceData, blockData, user, object);

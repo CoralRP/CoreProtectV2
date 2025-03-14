@@ -60,7 +60,7 @@ public class EntityKillLogger {
                 keys.close();
             }
 
-            BlockStatement.insert(preparedStmt, batchCount, time, userId, wid, x, y, z, type, entity_key, null, null, 3, 0);
+            BlockStatement.insert(preparedStmt, batchCount, time, userId, wid, x, y, z, type, entity_key, null, null, 3, false, 0);
         }
         catch (Exception e) {
             e.printStackTrace();

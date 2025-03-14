@@ -103,25 +103,7 @@ public class StatusCommand {
                     }
 
                     try {
-                        String cpuInfo = "";
-                        if (ConfigHandler.processorInfo != null) {
-                            String modelName = ConfigHandler.processorInfo.getProcessorIdentifier().getName();
-                            if (modelName.contains(" CPU")) {
-                                String[] split = modelName.split(" CPU")[0].split(" ");
-                                modelName = split[split.length - 1];
-                            }
-                            else if (modelName.contains(" Processor")) {
-                                String[] split = modelName.split(" Processor")[0].split(" ");
-                                modelName = split[split.length - 1];
-                            }
-
-                            String cpuSpeed = String.valueOf(ConfigHandler.processorInfo.getMaxFreq());
-                            cpuSpeed = String.format("%.2f", Long.valueOf(cpuSpeed) / 1000000000.0);
-                            cpuInfo = "x" + Runtime.getRuntime().availableProcessors() + " " + cpuSpeed + "GHz " + modelName + ".";
-                        }
-                        else {
-                            cpuInfo = "x" + Runtime.getRuntime().availableProcessors() + " " + Phrase.build(Phrase.CPU_CORES);
-                        }
+                        String cpuInfo = "x" + Runtime.getRuntime().availableProcessors() + " " + Phrase.build(Phrase.CPU_CORES);
 
                         int mb = 1024 * 1024;
                         Runtime runtime = Runtime.getRuntime();

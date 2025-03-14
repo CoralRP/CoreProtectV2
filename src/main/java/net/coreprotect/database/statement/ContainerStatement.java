@@ -10,7 +10,7 @@ public class ContainerStatement {
         throw new IllegalStateException("Database class");
     }
 
-    public static void insert(PreparedStatement preparedStmt, int batchCount, int time, int id, int wid, int x, int y, int z, int type, int data, int amount, Object metadata, int action, int rolledBack) {
+    public static void insert(PreparedStatement preparedStmt, int batchCount, int time, int id, int wid, int x, int y, int z, int type, int data, int amount, Object metadata, int action, boolean glove, int rolledBack) {
         try {
             byte[] byteData = ItemUtils.convertByteData(metadata);
             preparedStmt.setInt(1, time);
@@ -24,7 +24,8 @@ public class ContainerStatement {
             preparedStmt.setInt(9, amount);
             preparedStmt.setObject(10, byteData);
             preparedStmt.setInt(11, action);
-            preparedStmt.setInt(12, rolledBack);
+            preparedStmt.setBoolean(12, glove);
+            preparedStmt.setInt(13, rolledBack);
             preparedStmt.addBatch();
 
             if (batchCount > 0 && batchCount % 1000 == 0) {

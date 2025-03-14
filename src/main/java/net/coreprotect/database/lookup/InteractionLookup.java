@@ -1,9 +1,15 @@
 package net.coreprotect.database.lookup;
 
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
 
+import net.coreprotect.database.Database;
+import net.coreprotect.database.lookup.objects.InteractLookup;
+import net.coreprotect.database.lookup.objects.Lookup;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
@@ -67,7 +73,7 @@ public class InteractionLookup {
             results.close();
             int totalPages = (int) Math.ceil(count / (limit + 0.0));
 
-            query = "SELECT time,user,action,type,data,rolled_back FROM " + ConfigHandler.prefix + "block " + WorldUtils.getWidIndex("block") + "WHERE wid = '" + worldId + "' AND x = '" + x + "' AND z = '" + z + "' AND y = '" + y + "' AND action='2' AND time >= '" + checkTime + "' ORDER BY rowid DESC LIMIT " + pageStart + ", " + limit + "";
+            query = "SELECT time,user,action,type,data,glove,rolled_back FROM " + ConfigHandler.prefix + "block " + WorldUtils.getWidIndex("block") + "WHERE wid = '" + worldId + "' AND x = '" + x + "' AND z = '" + z + "' AND y = '" + y + "' AND action='2' AND time >= '" + checkTime + "' ORDER BY rowid DESC LIMIT " + pageStart + ", " + limit + "";
             results = statement.executeQuery(query);
 
             StringBuilder resultBuilder = new StringBuilder();
@@ -77,6 +83,7 @@ public class InteractionLookup {
                 int resultType = results.getInt("type");
                 int resultData = results.getInt("data");
                 long resultTime = results.getLong("time");
+                boolean glove = results.getBoolean("glove");
                 int resultRolledBack = results.getInt("rolled_back");
 
                 if (ConfigHandler.playerIdCacheReversed.get(resultUserId) == null) {
@@ -111,7 +118,8 @@ public class InteractionLookup {
                     target = target.split(":")[1];
                 }
 
-                resultBuilder.append(timeAgo + " " + Color.WHITE + "- ").append(Phrase.build(Phrase.LOOKUP_INTERACTION, Color.DARK_AQUA + rbFormat + resultUser + Color.WHITE + rbFormat, Color.DARK_AQUA + rbFormat + target + Color.WHITE, Selector.FIRST)).append("\n");
+                String gloveTag = glove ? Color.GREY + "(guanto) " : "";
+                resultBuilder.append(timeAgo + " " + Color.WHITE + "- " + gloveTag).append(Phrase.build(Phrase.LOOKUP_INTERACTION, Color.DARK_AQUA + rbFormat + resultUser + Color.WHITE + rbFormat, Color.DARK_AQUA + rbFormat + target + Color.WHITE, Selector.FIRST)).append("\n");
                 PluginChannelListener.getInstance().sendData(commandSender, resultTime, Phrase.LOOKUP_INTERACTION, Selector.FIRST, resultUser, target, -1, x, y, z, worldId, rbFormat, false, false);
             }
             result = resultBuilder.toString();
@@ -142,6 +150,39 @@ public class InteractionLookup {
         }
 
         return result;
+    }
+
+    public static CompletableFuture<List<Lookup>> lookupInteraction(Location location, long startTime, long endTime) {
+        return CompletableFuture.supplyAsync(() -> {
+            List<Lookup> result = new ArrayList<>();
+
+            try (Connection connection = Database.getConnection(false, 1000); PreparedStatement statement = connection.prepareStatement("SELECT * FROM " + ConfigHandler.prefix + "block WHERE action = 2 AND wid = ? AND x = ? AND z = ? AND y = ? AND time > ? AND time < ? ORDER BY rowid DESC")) {
+                statement.setInt(1, WorldUtils.getWorldId(location.getWorld().getName()));
+                statement.setInt(2, location.getBlockX());
+                statement.setInt(3, location.getBlockZ());
+                statement.setInt(4, location.getBlockY());
+                statement.setLong(5, startTime);
+                statement.setLong(6, endTime);
+
+                ResultSet results = statement.executeQuery();
+                while (results.next()) {
+                    int resultUserId = results.getInt("user");
+                    long time = results.getLong("time");
+                    boolean glove = results.getBoolean("glove");
+
+                    if (ConfigHandler.playerIdCacheReversed.get(resultUserId) == null) {
+                        UserStatement.loadName(statement.getConnection(), resultUserId);
+                    }
+
+                    String resultUser = ConfigHandler.playerIdCacheReversed.get(resultUserId);
+                    result.add(new InteractLookup(resultUser, time, glove));
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+            return result;
+        });
     }
 
 }

@@ -162,6 +162,6 @@ public final class HopperPullListener {
         }
 
         originalSource[inventoryContents.length] = movedItem;
-        InventoryChangeListener.onInventoryInteract(user, sourceInventory, originalSource, null, sourceInventory.getLocation(), true);
+        InventoryChangeListener.onInventoryInteract(user, sourceInventory, originalSource, null, sourceInventory.getLocation(), true, false);
     }
 }

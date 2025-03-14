@@ -1,11 +1,15 @@
 package net.coreprotect.database.lookup;
 
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
 
+import net.coreprotect.database.Database;
+import net.coreprotect.database.lookup.objects.ContainerLookup;
+import net.coreprotect.database.lookup.objects.Lookup;
+import net.coreprotect.database.rollback.Rollback;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
@@ -21,6 +25,7 @@ import net.coreprotect.utility.ItemUtils;
 import net.coreprotect.utility.MaterialUtils;
 import net.coreprotect.utility.StringUtils;
 import net.coreprotect.utility.WorldUtils;
+import org.bukkit.inventory.ItemStack;
 
 public class ChestTransactionLookup {
 
@@ -73,9 +78,9 @@ public class ChestTransactionLookup {
 
             int totalPages = (int) Math.ceil(count / (limit + 0.0));
 
-            query = "SELECT time,user,action,type,data,amount,metadata,rolled_back FROM " + ConfigHandler.prefix + "container " + WorldUtils.getWidIndex("container") + "WHERE wid = '" + worldId + "' AND (x = '" + x + "' OR x = '" + x2 + "') AND (z = '" + z + "' OR z = '" + z2 + "') AND y = '" + y + "' ORDER BY rowid DESC LIMIT " + pageStart + ", " + limit + "";
+            query = "SELECT time,user,action,type,data,amount,metadata,rolled_back,glove FROM " + ConfigHandler.prefix + "container " + WorldUtils.getWidIndex("container") + "WHERE wid = '" + worldId + "' AND (x = '" + x + "' OR x = '" + x2 + "') AND (z = '" + z + "' OR z = '" + z2 + "') AND y = '" + y + "' ORDER BY rowid DESC LIMIT " + pageStart + ", " + limit + "";
             if (exact) {
-                query = "SELECT time,user,action,type,data,amount,metadata,rolled_back FROM " + ConfigHandler.prefix + "container " + WorldUtils.getWidIndex("container") + "WHERE wid = '" + worldId + "' AND (x = '" + l.getBlockX() + "') AND (z = '" + l.getBlockZ() + "') AND y = '" + y + "' ORDER BY rowid DESC LIMIT " + pageStart + ", " + limit + "";
+                query = "SELECT time,user,action,type,data,amount,metadata,rolled_back,glove FROM " + ConfigHandler.prefix + "container " + WorldUtils.getWidIndex("container") + "WHERE wid = '" + worldId + "' AND (x = '" + l.getBlockX() + "') AND (z = '" + l.getBlockZ() + "') AND y = '" + y + "' ORDER BY rowid DESC LIMIT " + pageStart + ", " + limit + "";
             }
             results = statement.executeQuery(query);
             while (results.next()) {
@@ -86,6 +91,7 @@ public class ChestTransactionLookup {
                 long resultTime = results.getLong("time");
                 int resultAmount = results.getInt("amount");
                 int resultRolledBack = results.getInt("rolled_back");
+                boolean glove = results.getBoolean("glove");
                 byte[] resultMetadata = results.getBytes("metadata");
                 String tooltip = ItemUtils.getEnchantments(resultMetadata, resultType, resultAmount);
 
@@ -123,7 +129,8 @@ public class ChestTransactionLookup {
                     target = target.split(":")[1];
                 }
 
-                result.add(new StringBuilder(timeAgo + " " + tag + " " + Phrase.build(Phrase.LOOKUP_CONTAINER, Color.DARK_AQUA + rbFormat + resultUser + Color.WHITE + rbFormat, "x" + resultAmount, ChatUtils.createTooltip(Color.DARK_AQUA + rbFormat + target, tooltip) + Color.WHITE, selector)).toString());
+                String gloveTag = glove ? Color.GREY + " (guanto)" : "";
+                result.add(new StringBuilder(timeAgo + " " + tag + gloveTag + " " + Phrase.build(Phrase.LOOKUP_CONTAINER, Color.DARK_AQUA + rbFormat + resultUser + Color.WHITE + rbFormat, "x" + resultAmount, ChatUtils.createTooltip(Color.DARK_AQUA + rbFormat + target, tooltip) + Color.WHITE, selector)).toString());
                 PluginChannelListener.getInstance().sendData(commandSender, resultTime, Phrase.LOOKUP_CONTAINER, selector, resultUser, target, resultAmount, x, y, z, worldId, rbFormat, true, tag.contains("+"));
             }
             results.close();
@@ -152,6 +159,46 @@ public class ChestTransactionLookup {
         }
 
         return result;
+    }
+
+    public static CompletableFuture<List<Lookup>> lookupContainer(Location location, long startTime, long endTime) {
+        return CompletableFuture.supplyAsync(() -> {
+            List<Lookup> result = new ArrayList<>();
+
+            try (Connection connection = Database.getConnection(false, 1000); PreparedStatement statement = connection.prepareStatement("SELECT * FROM " + ConfigHandler.prefix + "container WHERE wid = ? AND x = ? AND z = ? AND y = ? AND time > ? AND time < ? ORDER BY rowid DESC")) {
+                statement.setInt(1, WorldUtils.getWorldId(location.getWorld().getName()));
+                statement.setInt(2, location.getBlockX());
+                statement.setInt(3, location.getBlockZ());
+                statement.setInt(4, location.getBlockY());
+                statement.setLong(5, startTime);
+                statement.setLong(6, endTime);
+
+                ResultSet results = statement.executeQuery();
+                while (results.next()) {
+                    int resultUserId = results.getInt("user");
+                    int action = results.getInt("action");
+                    int type = results.getInt("type");
+                    long time = results.getLong("time");
+                    int amount = results.getInt("amount");
+                    byte[] metadata = results.getBytes("metadata");
+                    boolean glove = results.getBoolean("glove");
+
+                    ItemStack item = new ItemStack(MaterialUtils.getType(type), amount);
+                    item = (ItemStack) Rollback.populateItemStack(item, metadata)[2];
+
+                    if (ConfigHandler.playerIdCacheReversed.get(resultUserId) == null) {
+                        UserStatement.loadName(statement.getConnection(), resultUserId);
+                    }
+
+                    String resultUser = ConfigHandler.playerIdCacheReversed.get(resultUserId);
+                    result.add(new ContainerLookup(resultUser, time, action, item, amount, glove));
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+            return result;
+        });
     }
 
 }

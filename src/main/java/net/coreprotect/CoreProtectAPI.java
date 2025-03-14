@@ -255,30 +255,13 @@ public class CoreProtectAPI extends Queue {
      *            The location
      * @return True if the interaction was logged
      */
-    public boolean logInteraction(String user, Location location) {
+    public boolean logInteraction(String user, Location location, boolean glove) {
         if (!isEnabled() || !isValidUserAndLocation(user, location)) {
             return false;
         }
 
-        Queue.queuePlayerInteraction(user, location.getBlock().getState(), location.getBlock().getType());
+        Queue.queuePlayerInteraction(user, location.getBlock().getState(), location.getBlock().getType(), glove);
         return true;
-    }
-
-    /**
-     * Logs a container transaction by a user at a location.
-     * 
-     * @param user
-     *            The username
-     * @param location
-     *            The location
-     * @return True if the transaction was logged
-     */
-    public boolean logContainerTransaction(String user, Location location) {
-        if (!isEnabled()) {
-            return false;
-        }
-
-        return InventoryChangeListener.inventoryTransaction(user, location, null);
     }
 
     /**

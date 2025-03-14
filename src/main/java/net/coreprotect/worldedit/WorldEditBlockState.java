@@ -15,6 +15,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.MaterialData;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
 
 public final class WorldEditBlockState implements BlockState {
 
@@ -192,7 +193,7 @@ public final class WorldEditBlockState implements BlockState {
     }
 
     @Override
-    public BlockState copy(Location location) {
+    public @NotNull BlockState copy(@NotNull Location location) {
         return null;
     }
 

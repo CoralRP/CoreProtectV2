@@ -104,10 +104,10 @@ public class BlockPlaceLogger {
 
             int internalType = MaterialUtils.getBlockId(type.name(), true);
             if (replacedType > 0 && MaterialUtils.getType(replacedType) != Material.AIR && MaterialUtils.getType(replacedType) != Material.CAVE_AIR) {
-                BlockStatement.insert(preparedStmt, batchCount, time, userId, wid, x, y, z, replacedType, replacedData, null, replaceBlockData, 0, 0);
+                BlockStatement.insert(preparedStmt, batchCount, time, userId, wid, x, y, z, replacedType, replacedData, null, replaceBlockData, 0, false, 0);
             }
 
-            BlockStatement.insert(preparedStmt, batchCount, time, userId, wid, x, y, z, internalType, data, meta, blockData, 1, 0);
+            BlockStatement.insert(preparedStmt, batchCount, time, userId, wid, x, y, z, internalType, data, meta, blockData, 1, false, 0);
         }
         catch (Exception e) {
             e.printStackTrace();

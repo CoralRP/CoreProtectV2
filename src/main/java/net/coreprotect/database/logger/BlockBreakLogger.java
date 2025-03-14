@@ -71,7 +71,7 @@ public class BlockBreakLogger {
                 return;
             }
 
-            BlockStatement.insert(preparedStmt, batchCount, time, userId, wid, x, y, z, type, data, meta, blockData, 0, 0);
+            BlockStatement.insert(preparedStmt, batchCount, time, userId, wid, x, y, z, type, data, meta, blockData, 0, false, 0);
         }
         catch (Exception e) {
             e.printStackTrace();

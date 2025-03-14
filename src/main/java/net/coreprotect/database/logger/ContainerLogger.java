@@ -34,7 +34,7 @@ public class ContainerLogger extends Queue {
         throw new IllegalStateException("Database class");
     }
 
-    public static void log(PreparedStatement preparedStmtContainer, PreparedStatement preparedStmtItems, int batchCount, String player, Material type, Object container, Location location) {
+    public static void log(PreparedStatement preparedStmtContainer, PreparedStatement preparedStmtItems, int batchCount, String player, Material type, Object container, Location location, boolean glove) {
         try {
             ItemStack[] contents = null;
             String faceData = null;
@@ -191,8 +191,8 @@ public class ContainerLogger extends Queue {
             ItemUtils.mergeItems(type, newInventory);
 
             if (type != Material.ENDER_CHEST) {
-                logTransaction(preparedStmtContainer, batchCount, player, type, faceData, oldInventory, 0, location);
-                logTransaction(preparedStmtContainer, batchCount, player, type, faceData, newInventory, 1, location);
+                logTransaction(preparedStmtContainer, batchCount, player, type, faceData, oldInventory, 0, location, glove);
+                logTransaction(preparedStmtContainer, batchCount, player, type, faceData, newInventory, 1, location, glove);
             }
             else { // pass ender chest transactions to item logger
                 ItemLogger.logTransaction(preparedStmtItems, batchCount, 0, player, location, oldInventory, ItemLogger.ITEM_REMOVE_ENDER);
@@ -207,7 +207,7 @@ public class ContainerLogger extends Queue {
         }
     }
 
-    protected static void logTransaction(PreparedStatement preparedStmt, int batchCount, String user, Material type, String faceData, ItemStack[] items, int action, Location location) {
+    protected static void logTransaction(PreparedStatement preparedStmt, int batchCount, String user, Material type, String faceData, ItemStack[] items, int action, Location location, boolean glove) {
         try {
             if (ConfigHandler.blacklist.get(user.toLowerCase(Locale.ROOT)) != null) {
                 return;
@@ -241,7 +241,7 @@ public class ContainerLogger extends Queue {
                         int typeId = MaterialUtils.getBlockId(item.getType().name(), true);
                         int data = 0;
                         int amount = item.getAmount();
-                        ContainerStatement.insert(preparedStmt, batchCount, time, userId, wid, x, y, z, typeId, data, amount, metadata, action, 0);
+                        ContainerStatement.insert(preparedStmt, batchCount, time, userId, wid, x, y, z, typeId, data, amount, metadata, action, glove, 0);
                         success = true;
                     }
                 }

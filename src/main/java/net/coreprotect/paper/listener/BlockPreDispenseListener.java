@@ -91,7 +91,7 @@ public final class BlockPreDispenseListener extends Queue implements Listener {
             // Process the inventory transaction
             String user = "#dispenser";
             ItemStack[] inventory = ((InventoryHolder) block.getState()).getInventory().getStorageContents();
-            InventoryChangeListener.inventoryTransaction(user, block.getLocation(), inventory);
+            InventoryChangeListener.inventoryTransaction(user, block.getLocation(), inventory, false);
         }
     }
 }

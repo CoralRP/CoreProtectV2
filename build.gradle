@@ -1,0 +1,105 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
+plugins {
+    id 'java'
+    id 'maven-publish'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'com.palantir.git-version' version '0.13.0'
+}
+
+group = 'it.coralrp.laroc'
+String projectVersion = '22.4'
+String projectBranch = 'development'
+version = projectVersion
+description = 'Provides block protection for your server.'
+logger.info("Building version $version")
+
+tasks.register('sourceJar', Jar) {
+    from sourceSets.main.allJava
+    archiveClassifier = "sources"
+}
+
+publishing {
+    publications {
+        library(MavenPublication) {
+            from components.java
+            artifact sourceJar
+        }
+    }
+
+    repositories {
+        maven {
+            url "https://repo.coralmc.it/releases"
+            credentials {
+                username "$mavenUser"
+                password "$mavenPassword"
+            }
+            authentication {
+                basic(BasicAuthentication)
+            }
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven { url = 'https://hub.spigotmc.org/nexus/content/groups/public/' }
+    maven { url = 'https://repo.papermc.io/repository/maven-public/' }
+    maven { url = 'https://repo.codemc.org/repository/maven-public/' }
+    maven { url = 'https://jitpack.io/' }
+}
+
+dependencies {
+    implementation(platform("com.intellectualsites.bom:bom-newest:1.45"))
+    compileOnly 'com.fastasyncworldedit:FastAsyncWorldEdit-Core'
+    compileOnly 'com.fastasyncworldedit:FastAsyncWorldEdit-Bukkit'
+    compileOnly 'io.papermc.paper:paper-api:1.21-R0.1-SNAPSHOT'
+    implementation 'com.zaxxer:HikariCP:5.0.1'
+}
+
+jar {
+    archiveClassifier.set("original")
+}
+
+artifacts {
+    archives shadowJar
+}
+
+shadowJar {
+    dependencies {
+        //relocate('com.zaxxer', project.group.toString())
+        exclude(dependency('com.google.code.gson:.*'))
+        exclude(dependency('org.intellij:.*'))
+        exclude(dependency('org.jetbrains:.*'))
+        exclude(dependency('org.slf4j:.*'))
+    }
+    archiveClassifier.set(null)
+}
+
+ext {
+    author = 'Intelli'
+
+    resourceTokens = [
+            'project.version': projectVersion,
+            'project.branch': projectBranch,
+    ]
+}
+
+processResources {
+    include 'plugin.yml'
+    filter(new Transformer<String, String>() {
+        @Override
+        String transform(String s) {
+            ReplaceTokens replaceTokens = new ReplaceTokens(new StringReader(s))
+            replaceTokens.setBeginToken('${')
+            replaceTokens.setEndToken('}')
+            resourceTokens.forEach { key, val ->
+                def token = new ReplaceTokens.Token()
+                token.setKey(key.toString())
+                token.setValue(val.toString())
+                replaceTokens.addConfiguredToken(token)
+            }
+            return replaceTokens.readLines().join('\n')
+        }
+    })
+}

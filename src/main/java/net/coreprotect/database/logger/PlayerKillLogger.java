@@ -46,7 +46,7 @@ public class PlayerKillLogger {
             int x = block.getX();
             int y = block.getY();
             int z = block.getZ();
-            BlockStatement.insert(preparedStmt, batchCount, time, userId, wid, x, y, z, 0, playerId, null, null, 3, 0);
+            BlockStatement.insert(preparedStmt, batchCount, time, userId, wid, x, y, z, 0, playerId, null, null, 3, false, 0);
         }
         catch (Exception e) {
             e.printStackTrace();

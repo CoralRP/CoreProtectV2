@@ -35,9 +35,7 @@ import net.coreprotect.patch.Patch;
 import net.coreprotect.spigot.SpigotAdapter;
 import net.coreprotect.utility.Chat;
 import net.coreprotect.utility.Color;
-import net.coreprotect.utility.SystemUtils;
 import net.coreprotect.utility.VersionUtils;
-import oshi.hardware.CentralProcessor;
 
 public class ConfigHandler extends Queue {
     public static int SERVER_VERSION = 0;
@@ -60,7 +58,6 @@ public class ConfigHandler extends Queue {
     public static int maximumPoolSize = 10;
 
     public static HikariDataSource hikariDataSource = null;
-    public static final CentralProcessor processorInfo = SystemUtils.getProcessorInfo();
     public static final boolean isSpigot = VersionUtils.isSpigot();
     public static final boolean isPaper = VersionUtils.isPaper();
     public static final boolean isFolia = VersionUtils.isFolia();

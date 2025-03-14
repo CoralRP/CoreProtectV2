@@ -22,7 +22,7 @@ public class PlayerInteractLogger {
         throw new IllegalStateException("Database class");
     }
 
-    public static void log(PreparedStatement preparedStmt, int batchCount, String user, BlockState block, Material blockType) {
+    public static void log(PreparedStatement preparedStmt, int batchCount, String user, BlockState block, Material blockType, boolean glove) {
         try {
             int type = MaterialUtils.getBlockId(blockType.name(), true);
             if (ConfigHandler.blacklist.get(user.toLowerCase(Locale.ROOT)) != null || MaterialUtils.getType(type).equals(Material.AIR) || MaterialUtils.getType(type).equals(Material.CAVE_AIR)) {
@@ -45,7 +45,7 @@ public class PlayerInteractLogger {
             int y = block.getY();
             int z = block.getZ();
             int data = 0;
-            BlockStatement.insert(preparedStmt, batchCount, time, userId, wid, x, y, z, type, data, null, null, 2, 0);
+            BlockStatement.insert(preparedStmt, batchCount, time, userId, wid, x, y, z, type, data, null, null, 2, glove, 0);
         }
         catch (Exception e) {
             e.printStackTrace();

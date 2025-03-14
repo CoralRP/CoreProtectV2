@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import net.coreprotect.utility.*;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -53,10 +54,6 @@ import net.coreprotect.model.BlockGroup;
 import net.coreprotect.paper.PaperAdapter;
 import net.coreprotect.thread.CacheHandler;
 import net.coreprotect.thread.Scheduler;
-import net.coreprotect.utility.Chat;
-import net.coreprotect.utility.Color;
-import net.coreprotect.utility.ItemUtils;
-import net.coreprotect.utility.WorldUtils;
 
 public final class PlayerInteractListener extends Queue implements Listener {
 
@@ -236,6 +233,8 @@ public final class PlayerInteractListener extends Queue implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     protected void onPlayerInteract(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+
         /* Logging for players punching out fire blocks. */
         if (event.getAction().equals(Action.LEFT_CLICK_BLOCK)) {
             World world = event.getClickedBlock().getWorld();
@@ -249,7 +248,6 @@ public final class PlayerInteractListener extends Queue implements Listener {
                     Block relativeBlock = event.getClickedBlock().getRelative(event.getBlockFace());
 
                     if (BlockGroup.FIRE.contains(relativeBlock.getType())) {
-                        Player player = event.getPlayer();
                         Material type = relativeBlock.getType();
                         Queue.queueBlockBreak(player.getName(), relativeBlock.getState(), type, relativeBlock.getBlockData().getAsString(), 0);
                     }
@@ -257,7 +255,6 @@ public final class PlayerInteractListener extends Queue implements Listener {
             }
         }
         else if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK) || event.getAction().equals(Action.RIGHT_CLICK_AIR)) {
-            Player player = event.getPlayer();
             Block block = event.getClickedBlock();
             World world = player.getWorld();
 
@@ -332,7 +329,7 @@ public final class PlayerInteractListener extends Queue implements Listener {
                                 }
                             }
 
-                            Queue.queuePlayerInteraction(player.getName(), interactBlock.getState(), type);
+                            Queue.queuePlayerInteraction(player.getName(), interactBlock.getState(), type, GloveUtils.haveGloves(player));
                         }
                     }
                     else if (BlockGroup.LIGHTABLES.contains(type)) { // extinguishing a lit block such as a campfire
@@ -414,7 +411,7 @@ public final class PlayerInteractListener extends Queue implements Listener {
 
                             if (!oldItemState.equals(newItemState)) {
                                 if (Config.getConfig(player.getWorld()).PLAYER_INTERACTIONS) {
-                                    Queue.queuePlayerInteraction(player.getName(), blockState, type);
+                                    Queue.queuePlayerInteraction(player.getName(), blockState, type, GloveUtils.haveGloves(player));
                                 }
 
                                 if (Config.getConfig(block.getWorld()).ITEM_TRANSACTIONS) {
@@ -455,20 +452,20 @@ public final class PlayerInteractListener extends Queue implements Listener {
 
                                 if (!oldItemState.equals(newItemState)) {
                                     if (Config.getConfig(player.getWorld()).PLAYER_INTERACTIONS) {
-                                        Queue.queuePlayerInteraction(player.getName(), blockState, type);
+                                        Queue.queuePlayerInteraction(player.getName(), blockState, type, GloveUtils.haveGloves(player));
                                     }
 
-                                    InventoryChangeListener.inventoryTransaction(player.getName(), blockState.getLocation(), null);
+                                    InventoryChangeListener.inventoryTransaction(player.getName(), blockState.getLocation(), null, GloveUtils.haveGloves(player));
                                 }
                             }
                             else { // fallback if unable to determine bookshelf slot
-                                InventoryChangeListener.inventoryTransaction(player.getName(), blockState.getLocation(), null);
+                                InventoryChangeListener.inventoryTransaction(player.getName(), blockState.getLocation(), null, GloveUtils.haveGloves(player));
                             }
                         }
                     }
                     else if (BukkitAdapter.ADAPTER.isDecoratedPot(type)) {
                         BlockState blockState = block.getState();
-                        InventoryChangeListener.inventoryTransaction(player.getName(), blockState.getLocation(), null);
+                        InventoryChangeListener.inventoryTransaction(player.getName(), blockState.getLocation(), null, GloveUtils.haveGloves(player));
                     }
                     else if (BukkitAdapter.ADAPTER.isSuspiciousBlock(type)) {
                         ItemStack handItem = null;
@@ -641,7 +638,6 @@ public final class PlayerInteractListener extends Queue implements Listener {
 
             World world = block.getWorld();
             if (event.useInteractedBlock() != Event.Result.DENY && Config.getConfig(world).BLOCK_BREAK) {
-                Player player = event.getPlayer();
                 if (block.getType().equals(Material.FARMLAND)) {
                     Block blockAbove = world.getBlockAt(block.getX(), block.getY() + 1, block.getZ());
                     Material type = blockAbove.getType();

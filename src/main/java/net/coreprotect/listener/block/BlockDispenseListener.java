@@ -63,7 +63,7 @@ public final class BlockDispenseListener extends Queue implements Listener {
                         inventory = Arrays.copyOf(inventory, inventory.length + 1);
                         inventory[inventory.length - 1] = item;
                     }
-                    InventoryChangeListener.inventoryTransaction(user, block.getLocation(), inventory);
+                    InventoryChangeListener.inventoryTransaction(user, block.getLocation(), inventory, false);
                 }
 
                 if (material.equals(Material.WATER_BUCKET)) {

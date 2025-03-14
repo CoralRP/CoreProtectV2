@@ -49,7 +49,7 @@ public final class BlockPlaceListener extends Queue implements Listener {
 
             if (blockType == Material.LECTERN && blockReplaced.getType() == Material.LECTERN) {
                 // Placing a book in a lectern - log this as a new item being placed in the existing lectern
-                InventoryChangeListener.inventoryTransaction(player.getName(), blockLogged.getLocation(), new ItemStack[1]);
+                InventoryChangeListener.inventoryTransaction(player.getName(), blockLogged.getLocation(), new ItemStack[1], false);
                 abort = true;
             }
             else if (MaterialUtils.listContains(BlockGroup.CONTAINERS, blockType) || MaterialUtils.listContains(BlockGroup.DIRECTIONAL_BLOCKS, blockType) || blockType.name().toUpperCase(Locale.ROOT).endsWith("_STAIRS")) {

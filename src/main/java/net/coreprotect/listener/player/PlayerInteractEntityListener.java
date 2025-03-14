@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
+import net.coreprotect.utility.GloveUtils;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Creature;
@@ -30,11 +31,12 @@ public final class PlayerInteractEntityListener extends Queue implements Listene
 
     @EventHandler(priority = EventPriority.MONITOR)
     protected void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
+        Player player = event.getPlayer();
+
         if (event instanceof PlayerArmorStandManipulateEvent) {
             return;
         }
 
-        Player player = event.getPlayer();
         final Entity entity = event.getRightClicked(); // change item in ItemFrame, etc
         if (entity instanceof ItemFrame) {
             ItemFrame frame = (ItemFrame) entity;
@@ -65,7 +67,7 @@ public final class PlayerInteractEntityListener extends Queue implements Listene
             }
 
             if (frame.getItem().getType() != Material.AIR && event.getHand().equals(EquipmentSlot.HAND) && Config.getConfig(player.getWorld()).PLAYER_INTERACTIONS) {
-                Queue.queuePlayerInteraction(player.getName(), entity.getLocation().getBlock().getState(), Material.ITEM_FRAME);
+                Queue.queuePlayerInteraction(player.getName(), entity.getLocation().getBlock().getState(), Material.ITEM_FRAME, GloveUtils.haveGloves(player));
             }
 
             if (!Config.getConfig(player.getWorld()).ITEM_TRANSACTIONS) {
@@ -140,7 +142,7 @@ public final class PlayerInteractEntityListener extends Queue implements Listene
         }
 
         ConfigHandler.transactingChest.computeIfAbsent(transactingChestId, k -> Collections.synchronizedList(new ArrayList<>()));
-        Queue.queueContainerTransaction(user, location, type, container, chestId);
+        Queue.queueContainerTransaction(user, location, type, container, chestId, false);
 
         if (logDrop) {
             ItemStack dropItem = contents[0];
