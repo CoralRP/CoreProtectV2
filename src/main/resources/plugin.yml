@@ -1,7 +1,7 @@
 name: CoreProtectV2
 main: net.coreprotect.CoreProtect
 version: ${project.version}
-branch: ${project.branch}
+branch: master
 api-version: 1.16
 folia-supported: true
 website: http://coreprotect.net

@@ -350,11 +350,7 @@ public class ItemUtils {
             bos.close();
             result = bos.toByteArray();
         }
-        catch (Exception e) { // only display exception on development branch
-            if (!ConfigHandler.EDITION_BRANCH.contains("-dev")) {
-                e.printStackTrace();
-            }
-        }
+        catch (Exception ignored)  {}
 
         return result;
     }
@@ -364,11 +360,7 @@ public class ItemUtils {
             org.bukkit.configuration.serialization.DelegateDeserialization delegate = itemMetaClass.getAnnotation(org.bukkit.configuration.serialization.DelegateDeserialization.class);
             return (ItemMeta) org.bukkit.configuration.serialization.ConfigurationSerialization.deserializeObject(args, delegate.value());
         }
-        catch (Exception e) { // only display exception on development branch
-            if (!ConfigHandler.EDITION_BRANCH.contains("-dev")) {
-                e.printStackTrace();
-            }
-        }
+        catch (Exception ignored) {}
 
         return null;
     }
